@@ -1,0 +1,12 @@
+              precision    recall  f1-score   support
+
+        news       0.69      0.69      0.69     44787
+    business       0.63      0.56      0.59     19558
+     opinion       0.66      0.59      0.63     19169
+     culture       0.80      0.83      0.82    159655
+       sport       0.75      0.68      0.71     26591
+   lifestyle       0.82      0.84      0.83     52459
+
+    accuracy                           0.77    322219
+   macro avg       0.73      0.70      0.71    322219
+weighted avg       0.77      0.77      0.77    322219
