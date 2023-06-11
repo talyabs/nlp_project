@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
-from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix
 from torch import nn
 from torch.optim import Adam
 from tqdm import tqdm
@@ -182,7 +181,17 @@ def evaluate(model, test_data):
     return true_labels, predictions_labels
 
 
-def gpt_classify(df, labels_mapping):
+def gpt_classify():
+    df = pd.read_csv("/data/talya/nlp_project/data/clean_df_for_modeling.csv")
+    logging.info(f"Data shape: {df.shape}")
+    df[["label_1", "label_2", "label_3", "label_4"]] = df["label"].str.split(
+        ".", expand=True
+    )
+    df["label_2_levels"] = df["label_1"] + "." + df["label_2"]
+
+    labels_mapping = dict()
+    for idx, label in enumerate(df["label_2_levels"].unique()):
+        labels_mapping[label] = idx
     df = df[["headline_text", "label_2_levels"]]
     num_classes = len(labels_mapping)
 
@@ -213,97 +222,5 @@ def gpt_classify(df, labels_mapping):
     final_df.to_csv("/data/talya/nlp_project/prediction_gpt2_first_level.csv")
 
 
-def gpt_classsify_2(train_texts, test_texts, train_labels, test_labels):
-    # Load the GPT-2 tokenizer
-    tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
-
-    # Tokenize the input texts
-    train_encodings = tokenizer(list(train_texts), truncation=True, padding=True)
-    test_encodings = tokenizer(list(test_texts), truncation=True, padding=True)
-
-    # Create PyTorch DataLoader for training and testing sets
-    train_dataset = torch.utils.data.TensorDataset(
-        torch.tensor(train_encodings["input_ids"]),
-        torch.tensor(train_encodings["attention_mask"]),
-        torch.tensor(train_labels),
-    )
-    test_dataset = torch.utils.data.TensorDataset(
-        torch.tensor(test_encodings["input_ids"]),
-        torch.tensor(test_encodings["attention_mask"]),
-        torch.tensor(test_labels),
-    )
-    train_loader = torch.utils.data.DataLoader(
-        train_dataset, batch_size=16, shuffle=True
-    )
-    test_loader = torch.utils.data.DataLoader(
-        test_dataset, batch_size=16, shuffle=False
-    )
-
-    # Load the pre-trained GPT-2 model for sequence classification
-    model = GPT2ForSequenceClassification.from_pretrained("gpt2", num_labels=2)
-
-    # Set the optimizer and learning rate
-    optimizer = AdamW(model.parameters(), lr=1e-5)
-
-    # Training loop
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model.to(device)
-    model.train()
-
-    for epoch in range(3):  # adjust the number of epochs as needed
-        for batch in train_loader:
-            input_ids, attention_mask, labels = batch
-            input_ids = input_ids.to(device)
-            attention_mask = attention_mask.to(device)
-            labels = labels.to(device)
-
-            optimizer.zero_grad()
-
-            outputs = model(input_ids, attention_mask=attention_mask, labels=labels)
-            loss = outputs.loss
-            logits = outputs.logits
-
-            loss.backward()
-            optimizer.step()
-
-    # Evaluation loop
-    model.eval()
-    test_loss = 0
-    correct = 0
-
-    with torch.no_grad():
-        for batch in test_loader:
-            input_ids, attention_mask, labels = batch
-            input_ids = input_ids.to(device)
-            attention_mask = attention_mask.to(device)
-            labels = labels.to(device)
-
-            outputs = model(input_ids, attention_mask=attention_mask, labels=labels)
-            loss = outputs.loss
-            logits = outputs.logits
-
-            test_loss += loss.item()
-            _, predicted_labels = torch.max(logits, dim=1)
-            correct += (predicted_labels == labels).sum().item()
-
-    accuracy = correct / len(test_dataset)
-    print("Accuracy:", accuracy)
-
-
 if __name__ == "__main__":
-    df = pd.read_csv("/data/talya/nlp_project/data/clean_df_for_modeling.csv")
-    # df = df.sample(frac=0.01)
-    df[["label_1", "label_2", "label_3", "label_4"]] = df["label"].str.split(
-        ".", expand=True
-    )
-    df["label_2_levels"] = df["label_1"] + "." + df["label_2"]
-
-    logging.info(f"Data shape: {df.shape}")
-
-    labels_mapping = dict()
-    for idx, label in enumerate(df["label_2_levels"].unique()):
-        labels_mapping[label] = idx
-
-    gpt_classify(df, labels_mapping)
-
-    # todo: 2 levels, first level only
+    gpt_classify()
