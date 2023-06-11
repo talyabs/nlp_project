@@ -50,12 +50,6 @@ def classify_headline(headline, categories, model):
 def clip_zerp_shot(headlines, labels, unique_labels):
     logging.info("Starting CLIP zero-shot classification")
 
-    # Tokenize categories
-    # tokenized_categories = clip.tokenize(labels).to(device)
-
-    # Tokenize headline
-    # tokenized_headlines = clip.tokenize(headlines).to(device)
-
     # Classify all headlines
     predicted_labels = []
     for headline in tqdm(headlines):
@@ -64,22 +58,6 @@ def clip_zerp_shot(headlines, labels, unique_labels):
     # Print classification report
     report = classification_report(labels, predicted_labels)
     print(report)
-
-    # # Obtain text embeddings
-    # for headline in tokenized_headlines:
-    #     with torch.no_grad():
-    #         headline_embedding = model.encode_text(headline)
-    #         category_embeddings = model.encode_text(tokenized_categories)
-
-    #         # Calculate cosine similarity between headline and category embeddings
-    #         cos_sim = torch.nn.functional.cosine_similarity(headline_embedding, category_embeddings)
-    #         top_category_idx = cos_sim.argmax().item()
-
-    #         # Find the most similar category
-    #         most_similar_category = labels[top_category_idx]
-
-    #     print("Headline:", headline)
-    #     print("Predicted Category:", most_similar_category)
 
 
 if __name__ == "__main__":
